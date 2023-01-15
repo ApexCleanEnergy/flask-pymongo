@@ -5,7 +5,7 @@ PyMongo support for Flask applications
 ## Quickstart
 
 ```python
-from flask import Flask
+from flask import Flask, render_template
 from flask_pymongo import PyMongo
 
 app = Flask(__name__)
@@ -21,5 +21,5 @@ def home_page():
 ## More Info
 
 * [Flask-PyMongo Documentation](https://flask-pymongo.readthedocs.org/)
-* [PyMongo Documentation](https://api.mongodb.org/python/current/)
-* [Flask Documentation](http://flask.pocoo.org/docs/)
+* [PyMongo Documentation](https://pymongo.readthedocs.io/en/stable/)
+* [Flask Documentation](https://flask.palletsprojects.com/)

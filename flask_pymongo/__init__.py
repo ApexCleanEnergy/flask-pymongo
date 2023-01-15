@@ -26,30 +26,17 @@
 
 __all__ = ("PyMongo", "ASCENDING", "DESCENDING")
 
+from functools import partial
 from mimetypes import guess_type
-import sys
 
-from bson.errors import InvalidId
-from bson.objectid import ObjectId
 from flask import abort, current_app, request
 from gridfs import GridFS, NoFile
 from pymongo import uri_parser
-from werkzeug.routing import BaseConverter
 from werkzeug.wsgi import wrap_file
 import pymongo
 
+from flask_pymongo.helpers import BSONObjectIdConverter, JSONEncoder
 from flask_pymongo.wrappers import MongoClient
-
-
-PY2 = sys.version_info[0] == 2
-
-# Python 3 compatibility
-if PY2:
-    text_type = (str, unicode)
-    num_type = (int, long)
-else:
-    text_type = str
-    num_type = int
 
 
 DESCENDING = pymongo.DESCENDING
@@ -57,35 +44,6 @@ DESCENDING = pymongo.DESCENDING
 
 ASCENDING = pymongo.ASCENDING
 """Ascending sort order."""
-
-
-class BSONObjectIdConverter(BaseConverter):
-
-    """A simple converter for the RESTful URL routing system of Flask.
-
-    .. code-block:: python
-
-        @app.route("/<ObjectId:task_id>")
-        def show_task(task_id):
-            task = mongo.db.tasks.find_one_or_404(task_id)
-            return render_template("task.html", task=task)
-
-    Valid object ID strings are converted into
-    :class:`~bson.objectid.ObjectId` objects; invalid strings result
-    in a 404 error. The converter is automatically registered by the
-    initialization of :class:`~flask_pymongo.PyMongo` with keyword
-    :attr:`ObjectId`.
-
-    """
-
-    def to_python(self, value):
-        try:
-            return ObjectId(value)
-        except InvalidId:
-            raise abort(404)
-
-    def to_url(self, value):
-        return str(value)
 
 
 class PyMongo(object):
@@ -102,9 +60,10 @@ class PyMongo(object):
 
     """
 
-    def __init__(self, app=None, uri=None, *args, **kwargs):
+    def __init__(self, app=None, uri=None, json_options=None, *args, **kwargs):
         self.cx = None
         self.db = None
+        self._json_encoder = partial(JSONEncoder, json_options=json_options)
 
         if app is not None:
             self.init_app(app, uri, *args, **kwargs)
@@ -156,6 +115,7 @@ class PyMongo(object):
             self.db = self.cx[database_name]
 
         app.url_map.converters["ObjectId"] = BSONObjectIdConverter
+        app.json_encoder = self._json_encoder
 
     # view helpers
     def send_file(self, filename=None, base="fs", version=-1,
@@ -180,11 +140,11 @@ class PyMongo(object):
         :param int cache_for: number of seconds that browsers should be
            instructed to cache responses
         """
-        if not isinstance(base, text_type):
+        if not isinstance(base, str):
             raise TypeError("'base' must be string or unicode")
-        if not isinstance(version, num_type):
+        if not isinstance(version, int):
             raise TypeError("'version' must be an integer")
-        if not isinstance(cache_for, num_type):
+        if not isinstance(cache_for, int):
             raise TypeError("'cache_for' must be an integer")
 
         storage = GridFS(self.db, base)
@@ -230,7 +190,7 @@ class PyMongo(object):
         :param kwargs: extra attributes to be stored in the file's document,
            passed directly to :meth:`gridfs.GridFS.put`
         """
-        if not isinstance(base, text_type):
+        if not isinstance(base, str):
             raise TypeError("'base' must be string or unicode")
         if not (hasattr(fileobj, "read") and callable(fileobj.read)):
             raise TypeError("'fileobj' must have read() method")

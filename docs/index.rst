@@ -64,8 +64,8 @@ not be accepted, and future changes may break compatibility in older
 versions.
 
 Flask-PyMongo is tested against `supported versions
-<https://www.mongodb.com/support-policy>`_ of MongoDB, and Python 2.7
-and 3.4+. For the exact list of version combinations that are tested and
+<https://www.mongodb.com/support-policy>`_ of MongoDB, and Python
+and 3.6+. For the exact list of version combinations that are tested and
 known to be compatible, see the `envlist` in `tox.ini
 <https://github.com/dcrosta/flask-pymongo/blob/master/tox.ini>`_.
 
@@ -81,7 +81,9 @@ Flask-PyMongo provides helpers for some common tasks:
 
 .. automethod:: flask_pymongo.PyMongo.save_file
 
-.. autoclass:: flask_pymongo.BSONObjectIdConverter
+.. autoclass:: flask_pymongo.helpers.BSONObjectIdConverter
+
+.. autoclass:: flask_pymongo.helpers.JSONEncoder
 
 Configuration
 -------------
@@ -91,6 +93,13 @@ You can configure Flask-PyMongo either by passing a `MongoDB URI
 :class:`~flask_pymongo.PyMongo` constructor, or assigning it to the
 ``MONGO_URI`` `Flask configuration variable
 <http://flask.pocoo.org/docs/1.0/config/>`_
+
+The :class:`~flask_pymongo.PyMongo` instance also accepts these additional
+customization options:
+
+* ``json_options``, a :class:`~bson.json_util.JSONOptions` instance which
+  controls the JSON serialization of MongoDB objects when used with
+  :func:`~flask.json.jsonify`.
 
 You may also pass additional keyword arguments to the ``PyMongo``
 constructor. These are passed directly through to the underlying
@@ -172,6 +181,23 @@ History and Contributors
 ------------------------
 
 Changes:
+
+- 2.4.0: Unreleased
+
+  - `#125 <https://github.com/dcrosta/flask-pymongo/pull/125>`_ Drop
+    MongoDB 3.2 support.
+  - `#130 <https://github.com/dcrosta/flask-pymongo/pull/130>`_ Fix
+    quickstart example in README (Emmanuel Arias).
+  - `#62 <https://github.com/dcrosta/flask-pymongo/issues/62>`_ Add
+    support for :func:`~flask.json.jsonify()`.
+  - `#131 <https://github.com/dcrosta/flask-pymongo/pulls/131>`_ Drop
+    support for Flask 0.11 and Python 3.4; Add support for MongoDB 4.2,
+    PyMongo 3.9, and Flask 1.1.
+
+- 2.3.0: April 24, 2019
+
+  - Update version compatibility matrix in tests, drop official support for
+    PyMongo less than 3.3.x.
 
 - 2.2.0: November 1, 2018
 
@@ -280,7 +306,7 @@ Changes:
   - This is a minor version bump which introduces backwards breaking
     changes! Please read these change notes carefully.
   - Removed read preference constants from Flask-PyMongo; to set a
-    read preference, use the string name or import contants directly
+    read preference, use the string name or import constants directly
     from :class:`pymongo.read_preferences.ReadPreference`.
   - `#22 (partial) <https://github.com/dcrosta/flask-pymongo/pull/22>`_
     Add support for ``MONGO_SOCKET_TIMEOUT_MS`` and
